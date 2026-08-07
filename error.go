@@ -6,8 +6,12 @@ import (
 	"io"
 	"runtime"
 	"strings"
+	"sync"
 	"sync/atomic"
 )
+
+// maxChainDepth 是错误链遍历的最大深度，防御意外成环导致的死循环。
+const maxChainDepth = 100
 
 // Error 是结构化错误：携带错误码、分类、消息、结构化字段与可选调用栈。
 // 通过 errors.Is / errors.As 与标准库错误链完全兼容。
@@ -18,6 +22,9 @@ type Error struct {
 	fields []KV
 	cause  error
 	stack  []uintptr
+
+	once   sync.Once // Error() 结果惰性缓存（并发安全）
+	errStr string
 }
 
 // New 创建一个无原因的结构化错误。
@@ -70,21 +77,25 @@ func Wrapf(err error, kind Kind, code Code, format string, args ...any) *Error {
 }
 
 // Error 返回格式为 "CODE: message: cause" 的文本；空字段自动省略。
+// 结果惰性缓存，重复打印零额外开销。
 func (e *Error) Error() string {
 	if e == nil {
 		return ""
 	}
-	var b strings.Builder
-	b.WriteString(string(e.code))
-	if e.msg != "" {
-		b.WriteString(": ")
-		b.WriteString(e.msg)
-	}
-	if e.cause != nil {
-		b.WriteString(": ")
-		b.WriteString(e.cause.Error())
-	}
-	return b.String()
+	e.once.Do(func() {
+		var b strings.Builder
+		b.WriteString(string(e.code))
+		if e.msg != "" {
+			b.WriteString(": ")
+			b.WriteString(e.msg)
+		}
+		if e.cause != nil {
+			b.WriteString(": ")
+			b.WriteString(e.cause.Error())
+		}
+		e.errStr = b.String()
+	})
+	return e.errStr
 }
 
 // Format 支持 %s / %q / %v；%+v 额外输出创建时捕获的调用栈。
@@ -148,11 +159,19 @@ func (e *Error) WithField(key string, val any) *Error {
 	if e == nil {
 		return nil
 	}
-	ne := *e
+	// 显式重建新实例：不复制 once/errStr（sync.Once 禁止复制），
+	// Error() 文本不含字段，新实例重新惰性计算即可。
+	ne := &Error{
+		code:  e.code,
+		kind:  e.kind,
+		msg:   e.msg,
+		cause: e.cause,
+		stack: e.stack,
+	}
 	ne.fields = make([]KV, 0, len(e.fields)+1)
 	ne.fields = append(ne.fields, e.fields...)
 	ne.fields = append(ne.fields, KV{Key: key, Value: val})
-	return &ne
+	return ne
 }
 
 // frame 是格式化输出用的单帧信息。
@@ -206,7 +225,7 @@ func KindOf(err error) Kind {
 
 // Is 判断错误链中是否存在指定错误码。
 func Is(err error, code Code) bool {
-	for err != nil {
+	for depth := 0; err != nil && depth < maxChainDepth; depth++ {
 		if e, ok := err.(*Error); ok && e.code == code {
 			return true
 		}
@@ -217,7 +236,7 @@ func Is(err error, code Code) bool {
 
 // Retryable 判断错误链中是否存在可重试分类（timeout/rate_limited/unavailable）。
 func Retryable(err error) bool {
-	for err != nil {
+	for depth := 0; err != nil && depth < maxChainDepth; depth++ {
 		if e, ok := err.(*Error); ok && e.kind.Retryable() {
 			return true
 		}
