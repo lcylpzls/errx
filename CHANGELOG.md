@@ -1,0 +1,22 @@
+# Changelog
+
+本项目遵循语义化版本（SemVer）。值得记录的变更统一维护在此文件。
+
+## [v1.0.0] - 2026-08-08
+
+### 新增
+
+- `Error` 结构化错误：错误码 + 分类 + 消息 + 结构化字段 + 可选调用栈；
+- 错误码注册表：`RegisterCode` / `Describe` / `Codes`（排序快照，支持文档生成）；
+- 错误分类：`Kind` 枚举与 `Retryable()`；
+- 包装链：`New` / `Newf` / `Wrap` / `Wrapf` / `WithField`，`Wrap(nil)` 返回 nil；
+- 标准库兼容：`Unwrap` / `Cause`，`errors.Is` / `errors.As` 全链路；
+- 查询辅助：`As` / `CodeOf` / `KindOf` / `Is` / `Retryable`；
+- 调用栈：创建时捕获，`%+v` 输出，`SetStackCapture` 全局开关；
+- `errx/logx` 适配子包：结构化错误转 logx 字段组；
+- 质量：两包语句覆盖率 100%、Fuzz、三平台 CI（含 race）。
+
+### 工程
+
+- MIT LICENSE、CHANGELOG、SECURITY、CODEOWNERS、PR/Issue 模板；
+- 工业化文档集：架构 / 使用 / 发布。
