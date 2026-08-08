@@ -32,6 +32,10 @@ jobs:
         run: go vet ./...
 
       - name: Staticcheck
+        # setup-go v7 默认 GOTOOLCHAIN=local；staticcheck 2026.1 要求 Go >= 1.25，
+        # 这里恢复 auto，让 Go 1.21 矩阵自动切换到所需工具链。
+        env:
+          GOTOOLCHAIN: auto
         run: |
           go install honnef.co/go/tools/cmd/staticcheck@2026.1
           staticcheck ./...

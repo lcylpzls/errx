@@ -19,6 +19,7 @@
 
 - CI 新增 apidiff API 兼容检查（对比 v1.0.0 冻结基线）与 Fuzz 短跑；
 - GitHub Actions 升级至 checkout@v7 / setup-go@v7 / upload-artifact@v7 / action-gh-release@v3，消除 Node 20 弃用警告；
+- CI 的 Staticcheck 步骤显式使用 `GOTOOLCHAIN=auto`，兼容 Go 1.21 矩阵（staticcheck 2026.1 要求 Go >= 1.25）；
 - 新增 `.gitattributes` 统一行尾处理，README 补充 CI 徽章并修正零依赖措辞；
 - 新增 CONTRIBUTING 与 issue 模板（bug / feature）。
 
