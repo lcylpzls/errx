@@ -26,6 +26,7 @@ type Error struct {
 
 // New 创建一个无原因的结构化错误。
 func New(kind Kind, code Code, msg string) *Error {
+	countConstruct(kind)
 	return &Error{
 		kind:  kind,
 		code:  code,
@@ -36,6 +37,7 @@ func New(kind Kind, code Code, msg string) *Error {
 
 // Newf 创建带格式化消息的结构化错误。
 func Newf(kind Kind, code Code, format string, args ...any) *Error {
+	countConstruct(kind)
 	return &Error{
 		kind:  kind,
 		code:  code,
@@ -50,6 +52,7 @@ func Wrap(err error, kind Kind, code Code, msg string) *Error {
 	if err == nil {
 		return nil
 	}
+	countConstruct(kind)
 	return &Error{
 		kind:  kind,
 		code:  code,
@@ -64,6 +67,7 @@ func Wrapf(err error, kind Kind, code Code, format string, args ...any) *Error {
 	if err == nil {
 		return nil
 	}
+	countConstruct(kind)
 	return &Error{
 		kind:  kind,
 		code:  code,
@@ -206,6 +210,7 @@ func As(err error) (*Error, bool) {
 
 // CodeOf 返回错误链中第一个结构化错误的错误码。
 func CodeOf(err error) (Code, bool) {
+	countQuery()
 	if e, ok := As(err); ok {
 		return e.code, true
 	}
@@ -214,6 +219,7 @@ func CodeOf(err error) (Code, bool) {
 
 // KindOf 返回错误链中第一个结构化错误的分类；无结构化错误时返回 KindUnknown。
 func KindOf(err error) Kind {
+	countQuery()
 	if e, ok := As(err); ok {
 		return e.kind
 	}
@@ -250,11 +256,13 @@ func (e *Error) Is(target error) bool {
 
 // Is 判断错误链中是否存在指定错误码（支持单链与 Aggregate 多错误展开）。
 func Is(err error, code Code) bool {
+	countQuery()
 	return errors.Is(err, codeSentinel(code))
 }
 
 // Retryable 判断错误链中是否存在可重试分类（支持单链与 Aggregate 多错误展开）。
 func Retryable(err error) bool {
+	countQuery()
 	return errors.Is(err, retryableSentinel{})
 }
 

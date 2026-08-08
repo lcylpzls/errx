@@ -133,3 +133,17 @@ w.WriteHeader(err.HTTPStatus())
 ```
 
 调用栈不跨服务传输（序列化时省略），字段与原因链完整保留。
+
+## 12. 观测指标
+
+```go
+// 错误构造与查询自动打点（原子计数，零锁）
+m := errx.Snapshot()
+fmt.Printf("构造 %d 次，查询 %d 次\n", m.Constructed, m.Queried)
+fmt.Printf("超时类构造：%d 次\n", m.ByKind[errx.KindTimeout])
+
+// 压测或统计窗口开始时清零
+errx.ResetMetrics()
+```
+
+指标字段：`Constructed`（构造数）、`Queried`（查询数）、`ByKind`（按 Kind 构造分布）。
