@@ -30,6 +30,7 @@ return errx.New(errx.KindBusiness, "ORDER_FAIL", "下单失败").
 - **多错误聚合**：`Join` 聚合多个错误，`errors.Is/As` 命中任一子错误；
 - **跨服务传输**：`Error` 原生 JSON 序列化/还原，`HTTPStatus()` 直接映射 HTTP 状态码；
 - **可观测**：`Snapshot()` 输出构造/查询计数与按 Kind 分布，零锁原子实现；
+- **HTTP 适配**：`errx/httpx` 一键输出状态码与 JSON 错误响应体；
 - **标准库兼容**：`Unwrap` / `errors.Is` / `errors.As` 全链路支持；
 - **结构化字段**：`WithField` 不可变追加，随错误传递业务上下文；
 - **调用栈**：创建时捕获（可全局开关），`fmt.Printf("%+v", err)` 输出完整栈；

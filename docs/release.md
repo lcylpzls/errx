@@ -12,6 +12,7 @@ API 基线见 `api-v1.0.0.md`（`go doc -all` 导出），可用 `golang.org/x/e
 
 | 版本 | 说明 |
 | --- | --- |
+| v1.1.0 | net/http 适配子包 httpx（状态映射 + JSON 错误响应） |
 | v1.0.0 | API 冻结：完整错误体系（17 Kind/分组/策略/聚合/JSON/HTTP/指标） |
 | v0.6.0 | 观测指标（构造/查询计数、按 Kind 分布） |
 | v0.5.0 | 跨服务 JSON 序列化/还原、HTTP 状态映射 |

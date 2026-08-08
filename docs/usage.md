@@ -147,3 +147,21 @@ errx.ResetMetrics()
 ```
 
 指标字段：`Constructed`（构造数）、`Queried`（查询数）、`ByKind`（按 Kind 构造分布）。
+
+## 13. HTTP 适配（errx/httpx）
+
+```go
+import "github.com/lcylpzls/errx/httpx"
+
+func handler(w http.ResponseWriter, r *http.Request) {
+    err := doBusiness()
+    if err != nil {
+        // 自动映射状态码（如 not_found → 404）并输出 JSON 错误体
+        httpx.WriteJSON(w, err)
+        return
+    }
+    w.WriteHeader(http.StatusOK)
+}
+```
+
+响应体格式：`{"code":"ORDER_FAIL","kind":"business","message":"ORDER_FAIL: 下单失败"}`。

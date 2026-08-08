@@ -2,6 +2,13 @@
 
 本项目遵循语义化版本（SemVer）。值得记录的变更统一维护在此文件。
 
+## [v1.1.0] - 2026-08-08
+
+### 新增
+
+- **net/http 适配子包 `errx/httpx`**：`Status(err)` 映射 HTTP 状态码，`WriteJSON(w, err)` 输出统一 JSON 错误响应体（code/kind/message），零第三方依赖；
+- staticcheck 升级至 2026.1（支持 Go 1.26 的 net/http 依赖分析）。
+
 ## [v1.0.0] - 2026-08-08
 
 ### API 冻结
