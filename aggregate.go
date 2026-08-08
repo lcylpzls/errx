@@ -1,6 +1,7 @@
 package errx
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"sync"
@@ -62,4 +63,39 @@ func (a *Aggregate) Errors() []error {
 	out := make([]error, len(a.errs))
 	copy(out, a.errs)
 	return out
+}
+
+// wireAggregate 是 Aggregate 的跨服务传输形态。
+type wireAggregate struct {
+	Errors []*wireError `json:"errors"`
+}
+
+// MarshalJSON 将聚合错误序列化为子错误数组，支持跨服务传输。
+// 子错误为 *Error 时完整保留错误码/分类/字段/原因链；
+// 非 errx 子错误以文本形式保留（与 Error 的 JSON 语义一致）。
+func (a *Aggregate) MarshalJSON() ([]byte, error) {
+	if a == nil {
+		return []byte("null"), nil
+	}
+	w := wireAggregate{Errors: make([]*wireError, 0, len(a.errs))}
+	for _, err := range a.errs {
+		w.Errors = append(w.Errors, toWire(err))
+	}
+	return json.Marshal(w)
+}
+
+// UnmarshalJSON 从 JSON 恢复聚合错误；子错误恢复为 *Error。
+func (a *Aggregate) UnmarshalJSON(data []byte) error {
+	var w wireAggregate
+	if err := json.Unmarshal(data, &w); err != nil {
+		return err
+	}
+	errs := make([]error, 0, len(w.Errors))
+	for _, we := range w.Errors {
+		errs = append(errs, fromWire(we))
+	}
+	a.errs = errs
+	a.once = sync.Once{}
+	a.msg = ""
+	return nil
 }

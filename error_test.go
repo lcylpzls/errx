@@ -29,6 +29,23 @@ func TestNewf(t *testing.T) {
 	}
 }
 
+func TestEmptyCodeNormalized(t *testing.T) {
+	cases := []*Error{
+		New(KindBusiness, "", "空码"),
+		Newf(KindBusiness, "", "空码 %s", "x"),
+		Wrap(errors.New("cause"), KindTimeout, "", "包装"),
+		Wrapf(errors.New("cause"), KindTimeout, "", "包装 %s", "x"),
+	}
+	for _, e := range cases {
+		if e.Code() != CodeUnknown {
+			t.Errorf("空错误码应归一为 UNKNOWN：%v", e)
+		}
+	}
+	if got := New(KindBusiness, "", "空码").Error(); got != "UNKNOWN: 空码" {
+		t.Errorf("归一后 Error() 不符：%s", got)
+	}
+}
+
 func TestWrap(t *testing.T) {
 	cause := errors.New("底层失败")
 	e := Wrap(cause, KindTimeout, "TIMEOUT", "调用超时")
@@ -231,6 +248,38 @@ func TestWithFieldTopLevel(t *testing.T) {
 	if e, ok := wrapped.(*Error); !ok || e.Code() != CodeUnknown || e.Unwrap() != plain {
 		t.Errorf("普通错误 WithField 包装不符：%v", wrapped)
 	}
+	if e, ok := wrapped.(*Error); ok {
+		if e.Error() != "UNKNOWN: 普通错误" {
+			t.Errorf("普通错误 WithField 文本不应重复：%s", e.Error())
+		}
+		if e.Message() != "普通错误" {
+			t.Errorf("普通错误 Message 应保留原文：%s", e.Message())
+		}
+	}
+}
+
+func TestStackTrace(t *testing.T) {
+	e := New(KindInternal, "STACK_TRACE", "带栈")
+	frames := e.StackTrace()
+	if len(frames) == 0 {
+		t.Fatal("StackTrace 应返回调用栈")
+	}
+	found := false
+	for _, f := range frames {
+		if strings.Contains(f.File, "error_test.go") {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Errorf("栈帧应包含测试文件：%+v", frames)
+	}
+
+	SetStackCapture(false)
+	if got := New(KindInternal, "NO_STACK", "无栈").StackTrace(); got != nil {
+		t.Errorf("关闭栈捕获后 StackTrace 应为 nil：%v", got)
+	}
+	SetStackCapture(true)
 }
 
 func TestSetStackCapture(t *testing.T) {

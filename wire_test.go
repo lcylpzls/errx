@@ -87,6 +87,17 @@ func TestUnmarshalJSONUnknownKind(t *testing.T) {
 	}
 }
 
+func TestUnmarshalJSONEmptyCodeNormalized(t *testing.T) {
+	data := []byte(`{"code":"","kind":"not_found","message":"m"}`)
+	var e Error
+	if err := json.Unmarshal(data, &e); err != nil {
+		t.Fatalf("Unmarshal 失败：%v", err)
+	}
+	if e.Code() != CodeUnknown {
+		t.Errorf("空 code 应归一为 UNKNOWN：%v", e.Code())
+	}
+}
+
 func TestUnmarshalJSONInvalid(t *testing.T) {
 	var e Error
 	if err := e.UnmarshalJSON([]byte("{invalid")); err == nil {

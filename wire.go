@@ -66,7 +66,7 @@ func fromWire(w *wireError) *Error {
 		return nil
 	}
 	e := &Error{
-		code:   w.Code,
+		code:   normalizeCode(w.Code),
 		kind:   parseKind(w.Kind),
 		msg:    w.Message,
 		fields: w.Fields,

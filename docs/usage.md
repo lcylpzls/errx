@@ -55,7 +55,14 @@ for _, info := range errx.Codes() {
 ```go
 fmt.Println(err)          // ORDER_FAIL: 下单失败
 fmt.Printf("%+v\n", err)  // 追加创建点调用栈
+
+// 程序化读取调用栈（日志/监控场景）
+for _, frame := range errx.As(err).StackTrace() {
+    fmt.Printf("%s:%d  %s\n", frame.File, frame.Line, frame.Function)
+}
 ```
+
+`StackTrace()` 返回 `[]errx.StackFrame`；`SetStackCapture(false)` 关闭捕获后返回 nil。
 
 ## 7. 与 logx 集成
 
@@ -115,6 +122,11 @@ err := errx.Join(
 )
 if errx.Is(err, "A1") { /* 命中子错误 */ }
 if errx.Retryable(err) { /* 聚合内存在可重试子错误 */ }
+
+// 聚合错误同样支持 JSON 跨服务传输
+data, _ := json.Marshal(err)
+var restored errx.Aggregate
+json.Unmarshal(data, &restored)
 ```
 
 ## 11. 跨服务传输与 HTTP 映射
@@ -133,6 +145,7 @@ w.WriteHeader(err.HTTPStatus())
 ```
 
 调用栈不跨服务传输（序列化时省略），字段与原因链完整保留。
+`Aggregate` 通过 `{"errors":[...]}` 传输子错误数组，还原后 `errors.Is` 可命中任一子错误。
 
 ## 12. 观测指标
 

@@ -29,7 +29,7 @@ type response struct {
 // err 为 nil 时输出 500 与未知分类，保证上层可直接安全调用。
 func WriteJSON(w http.ResponseWriter, err error) {
 	code, ok := errx.CodeOf(err)
-	if !ok {
+	if !ok || code == "" {
 		code = errx.CodeUnknown
 	}
 	msg := ""

@@ -29,7 +29,7 @@ func New(kind Kind, code Code, msg string) *Error {
 	countConstruct(kind)
 	return &Error{
 		kind:  kind,
-		code:  code,
+		code:  normalizeCode(code),
 		msg:   msg,
 		stack: captureStack(),
 	}
@@ -40,7 +40,7 @@ func Newf(kind Kind, code Code, format string, args ...any) *Error {
 	countConstruct(kind)
 	return &Error{
 		kind:  kind,
-		code:  code,
+		code:  normalizeCode(code),
 		msg:   fmt.Sprintf(format, args...),
 		stack: captureStack(),
 	}
@@ -55,7 +55,7 @@ func Wrap(err error, kind Kind, code Code, msg string) *Error {
 	countConstruct(kind)
 	return &Error{
 		kind:  kind,
-		code:  code,
+		code:  normalizeCode(code),
 		msg:   msg,
 		cause: err,
 		stack: captureStack(),
@@ -70,11 +70,19 @@ func Wrapf(err error, kind Kind, code Code, format string, args ...any) *Error {
 	countConstruct(kind)
 	return &Error{
 		kind:  kind,
-		code:  code,
+		code:  normalizeCode(code),
 		msg:   fmt.Sprintf(format, args...),
 		cause: err,
 		stack: captureStack(),
 	}
+}
+
+// normalizeCode 将空错误码归一为 CodeUnknown，保证错误文本格式稳定。
+func normalizeCode(code Code) Code {
+	if code == "" {
+		return CodeUnknown
+	}
+	return code
 }
 
 // Error 返回格式为 "CODE: message: cause" 的文本；空字段自动省略。
@@ -86,7 +94,9 @@ func (e *Error) Error() string {
 	e.once.Do(func() {
 		var b strings.Builder
 		b.WriteString(string(e.code))
-		if e.msg != "" {
+		// message 与 cause 文本相同时只输出一次（如 WithField 包装普通错误），
+		// 避免 "UNKNOWN: 普通错误: 普通错误" 式重复。
+		if e.msg != "" && (e.cause == nil || e.msg != e.cause.Error()) {
 			b.WriteString(": ")
 			b.WriteString(e.msg)
 		}
@@ -106,7 +116,7 @@ func (e *Error) Format(f fmt.State, verb rune) {
 		if f.Flag('+') {
 			io.WriteString(f, e.Error())
 			for _, frame := range e.frames() {
-				fmt.Fprintf(f, "\n\t%s:%d  %s", frame.file, frame.line, frame.fn)
+				fmt.Fprintf(f, "\n\t%s:%d  %s", frame.File, frame.Line, frame.Function)
 			}
 			return
 		}
@@ -175,28 +185,33 @@ func (e *Error) WithField(key string, val any) *Error {
 	return ne
 }
 
-// frame 是格式化输出用的单帧信息。
-type frame struct {
-	file string
-	line int
-	fn   string
+// StackFrame 是调用栈中的单帧信息，供日志与监控程序化读取。
+type StackFrame struct {
+	File     string
+	Line     int
+	Function string
 }
 
 // frames 将捕获的 PC 转换为可读帧。
-func (e *Error) frames() []frame {
+func (e *Error) frames() []StackFrame {
 	if len(e.stack) == 0 {
 		return nil
 	}
 	callers := runtime.CallersFrames(e.stack)
-	var out []frame
+	var out []StackFrame
 	for {
 		fr, more := callers.Next()
-		out = append(out, frame{file: fr.File, line: fr.Line, fn: fr.Function})
+		out = append(out, StackFrame{File: fr.File, Line: fr.Line, Function: fr.Function})
 		if !more {
 			break
 		}
 	}
 	return out
+}
+
+// StackTrace 返回创建时捕获的调用栈；栈捕获关闭或无栈时返回 nil。
+func (e *Error) StackTrace() []StackFrame {
+	return e.frames()
 }
 
 // As 从错误链中取出第一个 *Error。

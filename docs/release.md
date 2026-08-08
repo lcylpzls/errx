@@ -6,7 +6,9 @@
 - **v1.0.0 起冻结 API**：破坏性变更必须提升主版本（v2.0.0）；
 - 升级前查看 CHANGELOG。
 
-API 基线见 `api-v1.0.0.md`（`go doc -all` 导出），可用 `golang.org/x/exp/cmd/apidiff` 对比版本检测破坏。
+API 基线见 `api-vX.Y.Z.md`（`go doc -all` 导出，覆盖 errx/logx/httpx 三个包）。
+每个 minor 版本发布时重新生成基线；CI 的 apidiff 任务会自动对比 v1.0.0
+冻结基线，检测到破坏性变更即失败。
 
 ## 版本历史
 
@@ -42,7 +44,7 @@ git tag vX.Y.Z && git push origin vX.Y.Z
 - [ ] `go test -count=1 ./...` 通过；
 - [ ] `go vet ./...`、`staticcheck ./...` 零告警；
 - [ ] 全部包（errx/logx/httpx）语句覆盖率 100%；
-- [ ] GitHub CI 三平台矩阵全绿（含 Linux race）；
+- [ ] GitHub CI 三平台矩阵全绿（含 Linux race、apidiff 兼容检查、fuzz 短跑）；
 - [ ] CHANGELOG 已定版；
 - [ ] Release 工作流成功；
 - [ ] 临时模块验证 `go get github.com/lcylpzls/errx@vX.Y.Z`。

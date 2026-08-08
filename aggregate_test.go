@@ -1,6 +1,7 @@
 package errx
 
 import (
+	"encoding/json"
 	"errors"
 	"strings"
 	"sync"
@@ -84,6 +85,48 @@ func TestAggregateStdCompat(t *testing.T) {
 	}
 	if !Retryable(a) {
 		t.Error("errx.Retryable 应命中聚合内可重试子错误")
+	}
+}
+
+func TestAggregateJSON(t *testing.T) {
+	agg := Join(
+		New(KindBusiness, "ORDER_FAIL", "下单失败").WithField("order_id", "1"),
+		New(KindInternal, "DB_DOWN", "数据库不可用"),
+	)
+	data, err := json.Marshal(agg)
+	if err != nil {
+		t.Fatalf("聚合 Marshal 失败：%v", err)
+	}
+	if !strings.Contains(string(data), `"errors"`) || !strings.Contains(string(data), "ORDER_FAIL") {
+		t.Errorf("聚合 JSON 缺少子错误：%s", data)
+	}
+
+	var restored Aggregate
+	if err := json.Unmarshal(data, &restored); err != nil {
+		t.Fatalf("聚合 Unmarshal 失败：%v", err)
+	}
+	if !Is(&restored, "ORDER_FAIL") || !Is(&restored, "DB_DOWN") {
+		t.Error("还原后的聚合应可命中子错误码")
+	}
+	errs := restored.Errors()
+	if len(errs) != 2 {
+		t.Fatalf("还原后子错误数量不符：%d", len(errs))
+	}
+	if e, ok := As(errs[0]); !ok || len(e.Fields()) != 1 || e.Fields()[0].Key != "order_id" {
+		t.Errorf("还原后字段不符：%v", errs[0])
+	}
+
+	var nilAgg *Aggregate
+	if data, err := json.Marshal(nilAgg); err != nil || string(data) != "null" {
+		t.Errorf("nil 聚合应序列化为 null：%s %v", data, err)
+	}
+	if data, err := nilAgg.MarshalJSON(); err != nil || string(data) != "null" {
+		t.Errorf("直接调用 nil MarshalJSON 不符：%s %v", data, err)
+	}
+
+	var invalid Aggregate
+	if err := invalid.UnmarshalJSON([]byte("{invalid")); err == nil {
+		t.Error("非法 JSON 应返回错误")
 	}
 }
 

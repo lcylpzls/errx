@@ -2,6 +2,26 @@
 
 本项目遵循语义化版本（SemVer）。值得记录的变更统一维护在此文件。
 
+## [Unreleased]
+
+### 新增
+
+- `StackTrace()` 与 `StackFrame`：程序化读取创建点调用栈，不再局限于 `%+v` 格式化输出；
+- `Aggregate` 支持 JSON 序列化/还原，多错误可跨服务传输；
+- godoc 示例：`ExampleNew` / `ExampleWrap` / `ExampleJoin` / `ExampleWriteJSON`。
+
+### 修复
+
+- `WithField` 包装普通错误时不再重复输出原错误文本（如 `UNKNOWN: 普通错误: 普通错误` → `UNKNOWN: 普通错误`）；
+- 空错误码统一归一为 `CodeUnknown`，避免 `": 消息"` 式前导冒号。
+
+### 工程
+
+- CI 新增 apidiff API 兼容检查（对比 v1.0.0 冻结基线）与 Fuzz 短跑；
+- GitHub Actions 升级至 checkout@v7 / setup-go@v7 / upload-artifact@v7 / action-gh-release@v3，消除 Node 20 弃用警告；
+- 新增 `.gitattributes` 统一行尾处理，README 补充 CI 徽章并修正零依赖措辞；
+- 新增 CONTRIBUTING 与 issue 模板（bug / feature）。
+
 ## [v1.1.1] - 2026-08-08
 
 ### 修复
