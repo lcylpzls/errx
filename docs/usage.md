@@ -116,3 +116,20 @@ err := errx.Join(
 if errx.Is(err, "A1") { /* 命中子错误 */ }
 if errx.Retryable(err) { /* 聚合内存在可重试子错误 */ }
 ```
+
+## 11. 跨服务传输与 HTTP 映射
+
+```go
+// 服务端：错误直接 JSON 序列化（含原因链与字段）
+data, _ := json.Marshal(err)
+
+// 客户端：完整还原结构化错误
+var restored errx.Error
+json.Unmarshal(data, &restored)
+if errx.Is(&restored, "ORDER_FAIL") { /* 按错误码处理 */ }
+
+// HTTP 状态映射（网关/中间件）
+w.WriteHeader(err.HTTPStatus())
+```
+
+调用栈不跨服务传输（序列化时省略），字段与原因链完整保留。
