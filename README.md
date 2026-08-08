@@ -52,6 +52,24 @@ logger.Error("业务失败", errxlogx.Fields(err))
 // 输出字段：err.code=ORDER_FAIL, err.kind=business, err.message=下单失败, order_id=10086
 ```
 
+## HTTP 适配
+
+```go
+import "github.com/lcylpzls/errx/httpx"
+
+func handler(w http.ResponseWriter, r *http.Request) {
+    if err := doBusiness(); err != nil {
+        // not_found → 404，响应体为 {"code","kind","message"}
+        httpx.WriteJSON(w, err)
+        return
+    }
+    w.WriteHeader(http.StatusOK)
+}
+```
+
+`WriteJSON` 对 nil 与普通错误同样安全：nil 输出 500 + 未知分类，普通错误的
+`code` 回退为 `UNKNOWN`。
+
 ## 文档
 
 - [docs/architecture.md](docs/architecture.md) — 架构与设计

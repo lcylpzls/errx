@@ -62,7 +62,28 @@ func TestWriteJSONPlainError(t *testing.T) {
 	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
 		t.Fatalf("响应体非法 JSON：%v", err)
 	}
+	if body["code"] != string(errx.CodeUnknown) {
+		t.Errorf("普通错误 code 应回退为 UNKNOWN：%v", body)
+	}
 	if body["kind"] != "unknown" {
 		t.Errorf("普通错误 kind 不符：%v", body)
+	}
+}
+
+func TestWriteJSONNil(t *testing.T) {
+	rec := httptest.NewRecorder()
+	WriteJSON(rec, nil)
+	if rec.Code != http.StatusInternalServerError {
+		t.Errorf("nil 错误状态码不符：%d", rec.Code)
+	}
+	if got := rec.Header().Get("Content-Type"); got != "application/json; charset=utf-8" {
+		t.Errorf("Content-Type 不符：%s", got)
+	}
+	var body map[string]string
+	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
+		t.Fatalf("响应体非法 JSON：%v", err)
+	}
+	if body["code"] != string(errx.CodeUnknown) || body["kind"] != "unknown" {
+		t.Errorf("nil 错误响应体不符：%v", body)
 	}
 }

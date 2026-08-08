@@ -12,6 +12,7 @@ API 基线见 `api-v1.0.0.md`（`go doc -all` 导出），可用 `golang.org/x/e
 
 | 版本 | 说明 |
 | --- | --- |
+| v1.1.1 | httpx.WriteJSON 修复：nil 安全、普通错误 code 回退 UNKNOWN |
 | v1.1.0 | net/http 适配子包 httpx（状态映射 + JSON 错误响应） |
 | v1.0.0 | API 冻结：完整错误体系（17 Kind/分组/策略/聚合/JSON/HTTP/指标） |
 | v0.6.0 | 观测指标（构造/查询计数、按 Kind 分布） |
@@ -40,7 +41,7 @@ git tag vX.Y.Z && git push origin vX.Y.Z
 
 - [ ] `go test -count=1 ./...` 通过；
 - [ ] `go vet ./...`、`staticcheck ./...` 零告警；
-- [ ] 两包覆盖率 100%；
+- [ ] 全部包（errx/logx/httpx）语句覆盖率 100%；
 - [ ] GitHub CI 三平台矩阵全绿（含 Linux race）；
 - [ ] CHANGELOG 已定版；
 - [ ] Release 工作流成功；

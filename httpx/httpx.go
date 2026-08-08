@@ -26,12 +26,20 @@ type response struct {
 
 // WriteJSON 将错误以 JSON 形式写入 ResponseWriter：
 // 设置 Content-Type、状态码（由错误分类映射），响应体含 code/kind/message。
+// err 为 nil 时输出 500 与未知分类，保证上层可直接安全调用。
 func WriteJSON(w http.ResponseWriter, err error) {
-	code, _ := errx.CodeOf(err)
+	code, ok := errx.CodeOf(err)
+	if !ok {
+		code = errx.CodeUnknown
+	}
+	msg := ""
+	if err != nil {
+		msg = err.Error()
+	}
 	resp := response{
 		Code:    string(code),
 		Kind:    errx.KindOf(err).String(),
-		Message: err.Error(),
+		Message: msg,
 	}
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(Status(err))

@@ -165,3 +165,6 @@ func handler(w http.ResponseWriter, r *http.Request) {
 ```
 
 响应体格式：`{"code":"ORDER_FAIL","kind":"business","message":"ORDER_FAIL: 下单失败"}`。
+
+`WriteJSON` 对 nil 与普通错误安全：nil 输出 500 + 未知分类，普通错误的
+`code` 回退为 `UNKNOWN`，与 `kind` 回退语义一致，可直接放入错误处理中间件。
