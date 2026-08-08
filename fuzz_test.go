@@ -39,3 +39,37 @@ func FuzzWrapChain(f *testing.F) {
 		_ = Is(err, Code(c))
 	})
 }
+
+func FuzzIs(f *testing.F) {
+	f.Add("A", "B", int(0))
+	f.Add("X", "X", int(120))
+
+	f.Fuzz(func(t *testing.T, a, b string, depth int) {
+		if depth < 0 {
+			depth = -depth
+		}
+		depth %= maxChainDepth + 20
+		err := chain(depth, Code(a))
+		_ = Is(err, Code(b))
+		_, _ = CodeOf(err)
+		_ = KindOf(err)
+	})
+}
+
+func FuzzRetryable(f *testing.F) {
+	f.Add("T", int(0))
+	f.Add("B", int(100))
+
+	f.Fuzz(func(t *testing.T, code string, depth int) {
+		if depth < 0 {
+			depth = -depth
+		}
+		depth %= maxChainDepth + 20
+		leaf := New(KindTimeout, Code(code), "超时")
+		err := leaf
+		for i := 0; i < depth; i++ {
+			err = Wrap(err, KindInternal, "W", "w")
+		}
+		_ = Retryable(err)
+	})
+}

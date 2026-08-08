@@ -271,9 +271,11 @@ func WithField(err error, key string, val any) error {
 // ---------------------------------------------------------------------------
 
 var stackCapture atomic.Bool
+var stackDepth atomic.Int32
 
 func init() {
 	stackCapture.Store(true)
+	stackDepth.Store(32)
 }
 
 // SetStackCapture 全局开关调用栈捕获。生产环境如对错误构造频率敏感可关闭。
@@ -281,12 +283,21 @@ func SetStackCapture(enabled bool) {
 	stackCapture.Store(enabled)
 }
 
+// SetStackDepth 设置栈捕获的最大帧数；depth <= 0 时恢复默认 32。
+func SetStackDepth(depth int) {
+	if depth <= 0 {
+		depth = 32
+	}
+	stackDepth.Store(int32(depth))
+}
+
 // captureStack 捕获创建调用点的程序计数器（跳过本函数与构造函数）。
 func captureStack() []uintptr {
 	if !stackCapture.Load() {
 		return nil
 	}
-	pcs := make([]uintptr, 32)
+	d := int(stackDepth.Load())
+	pcs := make([]uintptr, d)
 	n := runtime.Callers(2, pcs)
 	return pcs[:n]
 }

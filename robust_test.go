@@ -142,3 +142,28 @@ func TestConcurrentErrorUsage(t *testing.T) {
 	}
 	wg.Wait()
 }
+
+func TestSetStackDepth(t *testing.T) {
+	SetStackDepth(4)
+	deepCall(20, func() {
+		if n := len(captureStack()); n == 0 || n > 4 {
+			t.Errorf("深度限制应生效：%d", n)
+		}
+	})
+
+	SetStackDepth(0) // 恢复默认
+	deepCall(20, func() {
+		if n := len(captureStack()); n <= 4 {
+			t.Errorf("恢复默认后应捕获更多帧：%d", n)
+		}
+	})
+}
+
+// deepCall 构造深调用栈，用于验证栈捕获深度上限。
+func deepCall(depth int, fn func()) {
+	if depth <= 0 {
+		fn()
+		return
+	}
+	deepCall(depth-1, fn)
+}
