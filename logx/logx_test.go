@@ -8,11 +8,12 @@ import (
 )
 
 func TestFields_ErrX(t *testing.T) {
+	errx.RegisterCode("ORDER_FAIL", "下单失败")
 	e := errx.New(errx.KindBusiness, "ORDER_FAIL", "下单失败").
 		WithField("order_id", "10086")
 
 	g := Fields(e)
-	if g.Len() != 4 {
+	if g.Len() != 6 {
 		t.Fatalf("字段数不符：%d", g.Len())
 	}
 
@@ -25,7 +26,7 @@ func TestFields_ErrX(t *testing.T) {
 			orderID = f.Value
 		}
 	}
-	for _, want := range []string{"err.code", "err.kind", "err.message", "order_id"} {
+	for _, want := range []string{"err.code", "err.kind", "err.retryable", "err.code_desc", "err.message", "order_id"} {
 		if !keys[want] {
 			t.Errorf("缺少字段 %s", want)
 		}
@@ -38,8 +39,8 @@ func TestFields_ErrX(t *testing.T) {
 func TestFields_ErrXNoMessage(t *testing.T) {
 	e := errx.New(errx.KindInvalid, "BAD_ARG", "")
 	g := Fields(e)
-	if g.Len() != 2 {
-		t.Fatalf("无消息时应只有 code/kind：%d", g.Len())
+	if g.Len() != 3 {
+		t.Fatalf("无消息时应只有 code/kind/retryable：%d", g.Len())
 	}
 	for i := 0; i < g.Len(); i++ {
 		if g.At(i).Key == "err.message" {
@@ -50,17 +51,17 @@ func TestFields_ErrXNoMessage(t *testing.T) {
 
 func TestFields_PlainError(t *testing.T) {
 	g := Fields(errors.New("普通错误"))
-	if g.Len() != 2 {
+	if g.Len() != 3 {
 		t.Fatalf("普通错误字段数不符：%d", g.Len())
 	}
-	if g.At(0).Key != "err.code" || g.At(1).Key != "err.kind" {
+	if g.At(0).Key != "err.code" || g.At(1).Key != "err.kind" || g.At(2).Key != "err.retryable" {
 		t.Errorf("普通错误字段不符：%v %v", g.At(0).Key, g.At(1).Key)
 	}
 }
 
 func TestFields_Nil(t *testing.T) {
 	g := Fields(nil)
-	if g.Len() != 2 {
+	if g.Len() != 3 {
 		t.Fatalf("nil 错误字段数不符：%d", g.Len())
 	}
 }

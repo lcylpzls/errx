@@ -2,6 +2,18 @@
 
 本项目遵循语义化版本（SemVer）。值得记录的变更统一维护在此文件。
 
+## [v0.4.0] - 2026-08-08
+
+### 新增
+
+- **Kind 扩展至 17 类**：新增 `AlreadyExists` / `Forbidden` / `DeadlineExceeded` / `QuotaExceeded` / `NotImplemented` / `DataLoss`，对齐 Google API / gRPC 错误模型；
+- **Category 领域分组**：`Kind.Category()` 将错误分为输入/认证授权/资源状态/依赖外部/系统内部/业务规则六类；
+- **Policy 策略抽象**：`Kind.Policy()` 输出可重试 / 告警 / 用户可见三维策略，`Retryable()` 委托 Policy；
+- **KindsMarkdown()**：按领域分组生成带策略标注的错误分类表；
+- **多错误聚合**：`Join(errs...)` 返回 `*Aggregate`，`errors.Is/As` 可命中任一子错误；
+- **Is / Retryable 基于 errors.Is**：支持聚合多错误展开，与标准库语义一致；
+- **logx 适配增强**：新增 `err.retryable`、`err.code_desc` 字段。
+
 ## [v0.3.0] - 2026-08-08
 
 ### 新增

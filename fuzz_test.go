@@ -48,7 +48,7 @@ func FuzzIs(f *testing.F) {
 		if depth < 0 {
 			depth = -depth
 		}
-		depth %= maxChainDepth + 20
+		depth %= 120
 		err := chain(depth, Code(a))
 		_ = Is(err, Code(b))
 		_, _ = CodeOf(err)
@@ -64,7 +64,7 @@ func FuzzRetryable(f *testing.F) {
 		if depth < 0 {
 			depth = -depth
 		}
-		depth %= maxChainDepth + 20
+		depth %= 120
 		leaf := New(KindTimeout, Code(code), "超时")
 		err := leaf
 		for i := 0; i < depth; i++ {

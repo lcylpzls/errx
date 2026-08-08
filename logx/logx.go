@@ -20,6 +20,10 @@ func Fields(err error) core.FieldGroup {
 	fs := []core.Field{
 		core.String("err.code", string(code)),
 		core.String("err.kind", kind.String()),
+		core.Bool("err.retryable", errx.Retryable(err)),
+	}
+	if desc := errx.Describe(code); desc != "" {
+		fs = append(fs, core.String("err.code_desc", desc))
 	}
 
 	if e, ok := errx.As(err); ok {

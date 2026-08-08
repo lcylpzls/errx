@@ -10,9 +10,6 @@ import (
 	"sync/atomic"
 )
 
-// maxChainDepth 是错误链遍历的最大深度，防御意外成环导致的死循环。
-const maxChainDepth = 100
-
 // Error 是结构化错误：携带错误码、分类、消息、结构化字段与可选调用栈。
 // 通过 errors.Is / errors.As 与标准库错误链完全兼容。
 type Error struct {
@@ -223,26 +220,42 @@ func KindOf(err error) Kind {
 	return KindUnknown
 }
 
-// Is 判断错误链中是否存在指定错误码。
-func Is(err error, code Code) bool {
-	for depth := 0; err != nil && depth < maxChainDepth; depth++ {
-		if e, ok := err.(*Error); ok && e.code == code {
-			return true
-		}
-		err = errors.Unwrap(err)
-	}
-	return false
+// codeSentinel 是错误码匹配哨兵，作为 errors.Is 的目标。
+type codeSentinel Code
+
+// Error 实现 error 接口。
+func (c codeSentinel) Error() string {
+	return string(c)
 }
 
-// Retryable 判断错误链中是否存在可重试分类（timeout/rate_limited/unavailable）。
-func Retryable(err error) bool {
-	for depth := 0; err != nil && depth < maxChainDepth; depth++ {
-		if e, ok := err.(*Error); ok && e.kind.Retryable() {
-			return true
-		}
-		err = errors.Unwrap(err)
+// retryableSentinel 是可重试匹配哨兵，作为 errors.Is 的目标。
+type retryableSentinel struct{}
+
+// Error 实现 error 接口。
+func (retryableSentinel) Error() string {
+	return "retryable"
+}
+
+// Is 支持 errors.Is 按错误码或可重试分类匹配（沿错误链与聚合子错误展开）。
+func (e *Error) Is(target error) bool {
+	switch t := target.(type) {
+	case codeSentinel:
+		return e.code == Code(t)
+	case retryableSentinel:
+		return e.kind.Retryable()
+	default:
+		return false
 	}
-	return false
+}
+
+// Is 判断错误链中是否存在指定错误码（支持单链与 Aggregate 多错误展开）。
+func Is(err error, code Code) bool {
+	return errors.Is(err, codeSentinel(code))
+}
+
+// Retryable 判断错误链中是否存在可重试分类（支持单链与 Aggregate 多错误展开）。
+func Retryable(err error) bool {
+	return errors.Is(err, retryableSentinel{})
 }
 
 // WithField 为任意错误附加结构化字段：

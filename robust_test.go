@@ -20,38 +20,27 @@ func chain(depth int, leafCode Code) error {
 }
 
 func TestIsChainDepthLimit(t *testing.T) {
-	// 100 层内应命中叶子
-	if !Is(chain(maxChainDepth, "DEEP_IN"), "DEEP_IN") {
-		t.Error("深度上限内应命中")
+	// 深链（101 层）应正常命中且不 panic：单链不可变保证无环
+	if !Is(chain(101, "DEEP_IN"), "DEEP_IN") {
+		t.Error("深链应命中叶子")
 	}
-	// 第 101 层不命中（防御死循环，不 panic）
-	outer := Wrap(chain(maxChainDepth, "DEEP_OUT"), KindInternal, "TOO_DEEP", "超出")
-	if Is(outer, "DEEP_OUT") {
-		t.Error("超过深度上限不应命中")
+	outer := Wrap(chain(101, "DEEP_OUT"), KindInternal, "TOO_DEEP", "超出")
+	if !Is(outer, "DEEP_OUT") || !Is(outer, "TOO_DEEP") {
+		t.Error("深链任一节点应命中")
 	}
-	if !Is(outer, "TOO_DEEP") {
-		t.Error("最外层应命中")
+	if Is(outer, "MISSING") {
+		t.Error("不应命中未存在的错误码")
 	}
 }
 
 func TestRetryableChainDepthLimit(t *testing.T) {
-	// 可重试节点在深度上限内
 	inner := New(KindTimeout, "R_IN", "超时")
 	err := inner
-	for i := 1; i < maxChainDepth; i++ {
+	for i := 1; i < 101; i++ {
 		err = Wrap(err, KindInternal, Code(fmt.Sprintf("W%d", i)), "w")
 	}
 	if !Retryable(err) {
-		t.Error("深度上限内应可重试")
-	}
-	// 可重试节点超过深度上限（叶子在第 101 层，外层均不可重试）
-	leaf := New(KindTimeout, "R_101", "超时")
-	deep := leaf
-	for i := 0; i < maxChainDepth; i++ {
-		deep = Wrap(deep, KindInternal, Code(fmt.Sprintf("W%d", i)), "w")
-	}
-	if Retryable(deep) {
-		t.Error("可重试节点超出深度上限后不应判定可重试")
+		t.Error("深链中可重试叶子应命中")
 	}
 }
 

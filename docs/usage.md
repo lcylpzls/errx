@@ -83,3 +83,36 @@ logger.Error("业务失败", errxlogx.Fields(err))
 - 外部可重试场景用 `KindTimeout / KindRateLimited / KindUnavailable`；
 - 用户可见消息与内部消息分离：内部 `msg` 可含细节，输出给用户时自行映射；
 - 错误构造频率极高且不需要栈时可 `errx.SetStackCapture(false)`。
+
+## 9. 错误分类与策略
+
+errx 提供三级体系：**Kind（细分枚举）→ Category（领域分组）→ Policy（处理策略）**。
+
+```go
+// Kind：17 类细分错误，对齐 Google API / gRPC 错误模型
+errx.New(errx.KindAlreadyExists, "USER_EXISTS", "用户已存在")
+errx.New(errx.KindForbidden, "NO_PERMISSION", "无权限")
+errx.New(errx.KindQuotaExceeded, "QUOTA", "配额耗尽")
+
+// Category：领域分组
+fmt.Println(errx.KindForbidden.Category()) // 认证与授权
+
+// Policy：处理策略（可重试 / 告警 / 用户可见）
+p := errx.KindUnavailable.Policy()
+if p.Retryable { backoff.Retry(fn) }
+if p.Alert { alert.Send() }
+
+// 生成按领域分组的错误分类表
+fmt.Println(errx.KindsMarkdown())
+```
+
+## 10. 多错误聚合
+
+```go
+err := errx.Join(
+    errx.New(errx.KindBusiness, "A1", "错误一"),
+    errx.New(errx.KindTimeout, "A2", "错误二"),
+)
+if errx.Is(err, "A1") { /* 命中子错误 */ }
+if errx.Retryable(err) { /* 聚合内存在可重试子错误 */ }
+```

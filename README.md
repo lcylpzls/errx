@@ -26,7 +26,8 @@ return errx.New(errx.KindBusiness, "ORDER_FAIL", "下单失败").
 ## 核心特性
 
 - **错误码**：`Code` 字符串 + 注册表（`RegisterCode` / `Describe` / `Codes`），支持文档生成；
-- **错误分类**：`Kind` 枚举（invalid / not_found / unauthorized / conflict / timeout / rate_limited / unavailable / internal / business），`Retryable()` 驱动重试策略；
+- **错误分类**：`Kind` 17 类细分枚举 + `Category` 领域分组 + `Policy` 策略（可重试/告警/用户可见）；
+- **多错误聚合**：`Join` 聚合多个错误，`errors.Is/As` 命中任一子错误；
 - **标准库兼容**：`Unwrap` / `errors.Is` / `errors.As` 全链路支持；
 - **结构化字段**：`WithField` 不可变追加，随错误传递业务上下文；
 - **调用栈**：创建时捕获（可全局开关），`fmt.Printf("%+v", err)` 输出完整栈；

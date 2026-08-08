@@ -259,3 +259,12 @@ func TestErrorsCompat(t *testing.T) {
 		t.Error("errors.Is 应沿 Unwrap 链命中内层")
 	}
 }
+
+func TestSentinelError(t *testing.T) {
+	if got := codeSentinel("SENT").Error(); got != "SENT" {
+		t.Errorf("codeSentinel Error 不符：%s", got)
+	}
+	if got := (retryableSentinel{}).Error(); got != "retryable" {
+		t.Errorf("retryableSentinel Error 不符：%s", got)
+	}
+}
