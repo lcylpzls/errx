@@ -2,7 +2,7 @@
 
 本项目遵循语义化版本（SemVer）。值得记录的变更统一维护在此文件。
 
-## [Unreleased]
+## [v1.2.0] - 2026-08-08
 
 ### 新增
 
@@ -21,7 +21,8 @@
 - GitHub Actions 升级至 checkout@v7 / setup-go@v7 / upload-artifact@v7 / action-gh-release@v3，消除 Node 20 弃用警告；
 - CI 的 Staticcheck 步骤显式使用 `GOTOOLCHAIN=auto`，兼容 Go 1.21 矩阵（staticcheck 2026.1 要求 Go >= 1.25）；
 - 新增 `.gitattributes` 统一行尾处理，README 补充 CI 徽章并修正零依赖措辞；
-- 新增 CONTRIBUTING 与 issue 模板（bug / feature）。
+- 新增 CONTRIBUTING 基础规范（简体中文 / PowerShell）与 issue 模板（bug / feature）；
+- `.gitignore` 增加 AI 工具本地文件（`.agents/`、`.codex/`、`AGENTS.md`），避免误推送。
 
 ## [v1.1.1] - 2026-08-08
 

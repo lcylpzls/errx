@@ -14,6 +14,7 @@ API 基线见 `api-vX.Y.Z.md`（`go doc -all` 导出，覆盖 errx/logx/httpx �
 
 | 版本 | 说明 |
 | --- | --- |
+| v1.2.0 | 迭代改进：StackTrace/StackFrame、Aggregate JSON、godoc 示例、CI apidiff 与 fuzz、工程规范 |
 | v1.1.1 | httpx.WriteJSON 修复：nil 安全、普通错误 code 回退 UNKNOWN |
 | v1.1.0 | net/http 适配子包 httpx（状态映射 + JSON 错误响应） |
 | v1.0.0 | API 冻结：完整错误体系（17 Kind/分组/策略/聚合/JSON/HTTP/指标） |
