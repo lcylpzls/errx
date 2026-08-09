@@ -1,6 +1,7 @@
 package errx
 
 import (
+	"errors"
 	"strings"
 	"testing"
 )
@@ -95,6 +96,31 @@ func TestNewCode(t *testing.T) {
 	e = NewCodef("NEW_CODE", "第 %d 次失败", 3)
 	if e.Error() != "NEW_CODE: 第 3 次失败" {
 		t.Errorf("NewCodef 消息不符:%s", e.Error())
+	}
+}
+
+func TestWrapCode(t *testing.T) {
+	RegisterCode("WRAP_CODE", "包装码")
+	RegisterCodeKind("WRAP_CODE", KindTimeout)
+	cause := New(KindBusiness, "CAUSE", "原因")
+	e := WrapCode(cause, "WRAP_CODE", "包装消息")
+	if e == nil || e.Code() != "WRAP_CODE" || e.Kind() != KindTimeout {
+		t.Errorf("WrapCode 元数据不符:%v %v", e.Code(), e.Kind())
+	}
+	if !errors.Is(e, cause) {
+		t.Error("WrapCode 应保留原因链")
+	}
+	// nil 原因返回 nil
+	if got := WrapCode(nil, "WRAP_CODE", "x"); got != nil {
+		t.Error("nil 原因应返回 nil")
+	}
+	if got := WrapCodef(nil, "WRAP_CODE", "x"); got != nil {
+		t.Error("WrapCodef 的 nil 原因应返回 nil")
+	}
+	// 格式化
+	e = WrapCodef(cause, "WRAP_CODE", "第 %d 次", 2)
+	if e.Error() != "WRAP_CODE: 第 2 次: CAUSE: 原因" {
+		t.Errorf("WrapCodef 消息不符:%s", e.Error())
 	}
 }
 

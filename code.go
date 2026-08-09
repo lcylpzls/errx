@@ -104,6 +104,23 @@ func NewCodef(code Code, format string, args ...any) *Error {
 	return Newf(CodeKind(code), code, format, args...)
 }
 
+// WrapCode 包装底层错误并附加已注册错误码，自动使用注册分类。
+// err 为 nil 时返回 nil，便于直接 return errx.WrapCode(err, ...) 写法。
+func WrapCode(err error, code Code, msg string) *Error {
+	if err == nil {
+		return nil
+	}
+	return Wrap(err, CodeKind(code), code, msg)
+}
+
+// WrapCodef 包装底层错误并附加已注册错误码与格式化消息。
+func WrapCodef(err error, code Code, format string, args ...any) *Error {
+	if err == nil {
+		return nil
+	}
+	return Wrapf(err, CodeKind(code), code, format, args...)
+}
+
 // CodesMarkdown 生成全库错误码手册 Markdown：按前缀分组，
 // 每行包含错误码、分类与说明，可直接写入仓库文档。
 func CodesMarkdown() string {

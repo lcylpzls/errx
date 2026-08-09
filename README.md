@@ -11,24 +11,28 @@
 ```go
 import "github.com/lcylpzls/errx"
 
+// 注册错误码（包内 init 一次完成），之后构造无需再写分类
+errx.RegisterCode("USER_NOT_FOUND", "用户不存在")
+errx.RegisterCodeKind("USER_NOT_FOUND", errx.KindNotFound)
+
 // 创建结构化错误
-return errx.New(errx.KindNotFound, "USER_NOT_FOUND", "用户不存在")
+return errx.NewCode("USER_NOT_FOUND", "用户不存在")
 
 // 包装底层错误
 if err != nil {
-    return errx.Wrap(err, errx.KindUnavailable, "DB_DOWN", "数据库不可用")
+    return errx.WrapCode(err, "DB_DOWN", "数据库不可用")
 }
 
 // 附加结构化字段
-return errx.New(errx.KindBusiness, "ORDER_FAIL", "下单失败").
+return errx.NewCode("ORDER_FAIL", "下单失败").
     WithField("order_id", "10086")
 ```
 
 ## 核心特性
 
 - **错误码**：`Code` 字符串 + 注册表（`RegisterCode` / `Describe` / `Codes`），
-  冲突检测防静默覆盖，`RegisterCodeKind` 声明分类，`NewCode` 便捷构造，
-  `CodesMarkdown` 生成全库错误码手册；
+  冲突检测防静默覆盖，`RegisterCodeKind` 声明分类，`NewCode` / `NewCodef` /
+  `WrapCode` / `WrapCodef` 免写分类便捷构造，`CodesMarkdown` 生成全库错误码手册；
 - **错误分类**：`Kind` 17 类细分枚举 + `Category` 领域分组 + `Policy` 策略（可重试/告警/用户可见）；
 - **多错误聚合**：`Join` 聚合多个错误，`errors.Is/As` 命中任一子错误，支持 JSON 序列化；
 - **跨服务传输**：`Error` 原生 JSON 序列化/还原，`HTTPStatus()` 直接映射 HTTP 状态码；
@@ -48,7 +52,7 @@ import (
     "github.com/lcylpzls/logx"
 )
 
-err := errx.New(errx.KindBusiness, "ORDER_FAIL", "下单失败").
+err := errx.NewCode("ORDER_FAIL", "下单失败").
     WithField("order_id", "10086")
 
 logger.Error("业务失败", errxlogx.Fields(err))
