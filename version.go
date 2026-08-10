@@ -1,4 +1,6 @@
 package errx
 
-// Version 是当前库版本,与 git tag 保持一致。
-const Version = "v1.5.4"
+import "github.com/lcylpzls/errx/internal/core"
+
+// Version 是当前库版本，与 git tag 保持一致。
+const Version = core.Version

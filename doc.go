@@ -1,20 +1,4 @@
+// Package errx 提供结构化的工业级错误模型：
+// 错误码、分类（Kind/Category）、构造与聚合、栈捕获、指标钩子。
+// 实现主体位于 internal/core，本包仅暴露稳定公开 API。
 package errx
-
-import (
-	"fmt"
-	"strings"
-)
-
-// Markdown 生成错误码注册表的 Markdown 文档（按错误码排序），
-// 可直接交付前端、API 网关或审计使用。
-func Markdown() string {
-	infos := Codes()
-	var b strings.Builder
-	b.WriteString("# 错误码表\n\n")
-	b.WriteString("| 错误码 | 说明 |\n")
-	b.WriteString("| --- | --- |\n")
-	for _, info := range infos {
-		fmt.Fprintf(&b, "| %s | %s |\n", info.Code, info.Description)
-	}
-	return b.String()
-}

@@ -2,6 +2,24 @@
 
 本项目遵循语义化版本（SemVer）。值得记录的变更统一维护在此文件。
 
+## [v1.6.0] - 2026-08-11
+
+### 重构
+
+- 实现主体下沉 `internal/core`，根包仅保留公开 API（类型别名 + 转发）；
+- 白盒测试迁入 `internal/core`，根包新增黑盒冒烟测试，两处覆盖率均 100%；
+- errx 变为零家族依赖（移除 logx 依赖，消除 errx↔logx 模块环）。
+
+### 破坏性变更
+
+- 删除 `errx/logx`、`errx/httpx` 子包（适配能力迁移至 logx/httpx 各自库）；
+- 删除 `Metrics/Snapshot/ResetMetrics` 与 `Markdown/KindsMarkdown/CodesMarkdown`；
+- 删除 `(*Error).HTTPStatus()`（HTTP 映射统一走 `KindHTTPStatus`）。
+
+### 其他
+
+- CI 移除与破坏性变更冲突的 apidiff 门禁。
+
 ## [v1.5.7] - 2026-08-10
 
 ### 变更

@@ -1,4 +1,4 @@
-package errx
+package core
 
 import (
 	"errors"
@@ -124,30 +124,6 @@ func TestWrapCode(t *testing.T) {
 	}
 }
 
-func TestCodesMarkdown(t *testing.T) {
-	RegisterCode("DOC_TEST_CODE", "文档测试码")
-	RegisterCodeKind("DOC_TEST_CODE", KindConflict)
-	RegisterCode("DOC_TEST_AA", "文档测试码二") // 同组两个码,覆盖组内排序
-	md := CodesMarkdown()
-	if !strings.Contains(md, "# 错误码手册") {
-		t.Error("缺少标题")
-	}
-	if !strings.Contains(md, "DOC_TEST_CODE") {
-		t.Error("缺少测试错误码")
-	}
-	if !strings.Contains(md, "DOC_TEST_AA") {
-		t.Error("缺少同组第二个错误码")
-	}
-	if !strings.Contains(md, "conflict") {
-		t.Error("缺少 Kind 分类")
-	}
-	if !strings.Contains(md, "| 错误码 | 分类 | 说明 |") {
-		t.Error("缺少表头")
-	}
-	if !strings.Contains(md, "## DOC") {
-		t.Error("缺少分组")
-	}
-}
 
 func TestGroupPrefix(t *testing.T) {
 	cases := []struct {

@@ -1,4 +1,4 @@
-package errx
+package core
 
 import (
 	"encoding/json"

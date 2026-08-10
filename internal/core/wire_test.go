@@ -1,4 +1,4 @@
-package errx
+package core
 
 import (
 	"encoding/json"
@@ -139,12 +139,3 @@ func TestKindHTTPStatus(t *testing.T) {
 	}
 }
 
-func TestErrorHTTPStatus(t *testing.T) {
-	if got := New(KindNotFound, "N", "n").HTTPStatus(); got != 404 {
-		t.Errorf("HTTPStatus 不符：%d", got)
-	}
-	var e *Error
-	if got := e.HTTPStatus(); got != 500 {
-		t.Errorf("nil Error HTTPStatus 应为 500：%d", got)
-	}
-}

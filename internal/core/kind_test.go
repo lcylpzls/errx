@@ -1,7 +1,6 @@
-package errx
+package core
 
 import (
-	"strings"
 	"testing"
 )
 
@@ -120,22 +119,3 @@ func TestKindRetryable(t *testing.T) {
 	}
 }
 
-func TestKindsMarkdown(t *testing.T) {
-	out := KindsMarkdown()
-	if !strings.Contains(out, "# 错误分类表") {
-		t.Error("缺少标题")
-	}
-	for _, want := range []string{
-		"## 输入与参数", "## 认证与授权", "## 资源与状态",
-		"## 依赖与外部", "## 系统内部", "## 业务规则",
-	} {
-		if !strings.Contains(out, want) {
-			t.Errorf("缺少分类分组 %s", want)
-		}
-	}
-	for _, want := range []string{"timeout", "internal", "business"} {
-		if !strings.Contains(out, want) {
-			t.Errorf("缺少 Kind %s", want)
-		}
-	}
-}

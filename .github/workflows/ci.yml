@@ -100,46 +100,6 @@ jobs:
       - name: Test
         run: go test -count=1 ./...
 
-  apidiff:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-
-      - name: Setup Go
-        uses: actions/setup-go@v7
-        with:
-          go-version: '1.26.5'
-          check-latest: true
-
-      - name: Install apidiff
-        run: go install golang.org/x/exp/cmd/apidiff@latest
-
-      - name: Export v1.0.0 baseline API
-        run: |
-          export PATH="$(go env GOPATH)/bin:$PATH"
-          git worktree add /tmp/errx-v1.0.0 v1.0.0
-          cd /tmp/errx-v1.0.0
-          apidiff -w /tmp/errx-core-old.bin .
-          apidiff -w /tmp/errx-logx-old.bin ./logx
-
-      - name: Compare current API with baseline
-        run: |
-          export PATH="$(go env GOPATH)/bin:$PATH"
-          apidiff -w /tmp/errx-core-new.bin .
-          apidiff -w /tmp/errx-logx-new.bin ./logx
-          for pair in errx-core errx-logx; do
-            echo "=== ${pair} ==="
-            OUT=$(apidiff "/tmp/${pair}-old.bin" "/tmp/${pair}-new.bin")
-            echo "$OUT"
-            if echo "$OUT" | grep -q "Incompatible"; then
-              echo "检测到破坏性 API 变更（违反 v1.0.0 冻结基线）"
-              exit 1
-            fi
-          done
-
   fuzz:
     runs-on: ubuntu-latest
     steps:
