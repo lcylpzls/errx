@@ -5,7 +5,7 @@
 > 指标统一外置：`errx.SetMetricsHook(适配器)` 即可把错误构造/查询
 > 事件转发到家族 metricsx 底座（默认关闭，零额外开销）。
 
-[![Go Version](https://img.shields.io/badge/Go-%3E%3D1.21-00ADD8?style=flat&logo=go)](https://go.dev/)
+[![Go Version](https://img.shields.io/badge/Go-%3E%3D1.26.5-00ADD8?style=flat&logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![CI](https://github.com/lcylpzls/errx/actions/workflows/ci.yml/badge.svg)](https://github.com/lcylpzls/errx/actions/workflows/ci.yml)
 
