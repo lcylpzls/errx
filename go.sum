@@ -1,4 +1,4 @@
-github.com/lcylpzls/logx v1.3.2 h1:RZtmXH2LR77mk/l8WrsztP27e6v71zGPyzBF01B4Mog=
-github.com/lcylpzls/logx v1.3.2/go.mod h1:EVpYAd/8ueoQJVdkcw4UHq7aKtlBr6Nj9P5x44JuMlM=
-github.com/lcylpzls/testx v1.4.3 h1:0eDjxIyqy1ffpNCNOXBJzogUGRaNBsOgU8BcIs5BUlc=
-github.com/lcylpzls/testx v1.4.3/go.mod h1:y+UKgHdKABet7RS3NVRejcWbyF4fXYZ8nmOIeNTWn8I=
+github.com/lcylpzls/logx v1.3.4 h1:SY0MOst90+fwxqpAMJvln46OHQwu7u1MEh7jkzsgJmA=
+github.com/lcylpzls/logx v1.3.4/go.mod h1:yuwucAdbDdExex5jEiiYaXqBNUku37skHloJRy0x/aw=
+github.com/lcylpzls/testx v1.4.4 h1:VtgfbtJsRI9ySlfbDDFLglz9cbA8tv1eaV/TPWh31lQ=
+github.com/lcylpzls/testx v1.4.4/go.mod h1:6X4rYVZN0CYdG/L//Qf92f5nixcp1NdyCR7iCbItas4=

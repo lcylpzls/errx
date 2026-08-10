@@ -2,6 +2,6 @@ module github.com/lcylpzls/errx
 
 go 1.26.5
 
-require github.com/lcylpzls/logx v1.3.2
+require github.com/lcylpzls/logx v1.3.4
 
-require github.com/lcylpzls/testx v1.4.3
+require github.com/lcylpzls/testx v1.4.4
