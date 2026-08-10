@@ -95,7 +95,7 @@ func TestAggregateJSON(t *testing.T) {
 	)
 	data, err := json.Marshal(agg)
 	if err != nil {
-		t.Fatalf("聚合 Marshal 失败：%v", err)
+		t.Fatalf("意外错误：%v", err)
 	}
 	if !strings.Contains(string(data), `"errors"`) || !strings.Contains(string(data), "ORDER_FAIL") {
 		t.Errorf("聚合 JSON 缺少子错误：%s", data)

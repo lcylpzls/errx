@@ -13,7 +13,7 @@ func TestMarshalJSON(t *testing.T) {
 
 	data, err := json.Marshal(e)
 	if err != nil {
-		t.Fatalf("MarshalJSON 失败：%v", err)
+		t.Fatalf("意外错误：%v", err)
 	}
 	s := string(data)
 	for _, want := range []string{
@@ -43,7 +43,7 @@ func TestMarshalJSONPlainCause(t *testing.T) {
 	e := Wrap(errors.New("plain cause"), KindInternal, "WRAP", "包装")
 	data, err := json.Marshal(e)
 	if err != nil {
-		t.Fatalf("MarshalJSON 失败：%v", err)
+		t.Fatalf("意外错误：%v", err)
 	}
 	if !strings.Contains(string(data), "plain cause") {
 		t.Errorf("非 errx 原因文本应保留：%s", data)
@@ -56,7 +56,7 @@ func TestUnmarshalJSONRoundTrip(t *testing.T) {
 
 	data, err := json.Marshal(original)
 	if err != nil {
-		t.Fatalf("Marshal 失败：%v", err)
+		t.Fatalf("意外错误：%v", err)
 	}
 
 	var got Error
