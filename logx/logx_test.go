@@ -2,6 +2,7 @@ package logx
 
 import (
 	"errors"
+	testx "github.com/lcylpzls/testx"
 	"testing"
 
 	"github.com/lcylpzls/errx"
@@ -31,9 +32,8 @@ func TestFields_ErrX(t *testing.T) {
 			t.Errorf("缺少字段 %s", want)
 		}
 	}
-	if orderID != "10086" {
-		t.Errorf("order_id 值不符：%v", orderID)
-	}
+	testx.Equal(t, orderID, "10086")
+
 }
 
 func TestFields_ErrXNoMessage(t *testing.T) {
@@ -43,9 +43,8 @@ func TestFields_ErrXNoMessage(t *testing.T) {
 		t.Fatalf("无消息时应只有 code/kind/retryable：%d", g.Len())
 	}
 	for i := 0; i < g.Len(); i++ {
-		if g.At(i).Key == "err.message" {
-			t.Error("空消息不应输出 err.message")
-		}
+		testx.NotEqual(t, g.At(i).Key, "err.message")
+
 	}
 }
 

@@ -3,6 +3,7 @@ package httpx
 import (
 	"encoding/json"
 	"errors"
+	testx "github.com/lcylpzls/testx"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -37,9 +38,8 @@ func TestWriteJSON(t *testing.T) {
 	err := errx.New(errx.KindBusiness, "ORDER_FAIL", "下单失败").WithField("order_id", "1")
 	WriteJSON(rec, err)
 
-	if rec.Code != http.StatusUnprocessableEntity {
-		t.Errorf("状态码不符：%d", rec.Code)
-	}
+	testx.Equal(t, rec.Code, http.StatusUnprocessableEntity)
+
 	if got := rec.Header().Get("Content-Type"); got != "application/json; charset=utf-8" {
 		t.Errorf("Content-Type 不符：%s", got)
 	}
@@ -55,9 +55,8 @@ func TestWriteJSON(t *testing.T) {
 func TestWriteJSONPlainError(t *testing.T) {
 	rec := httptest.NewRecorder()
 	WriteJSON(rec, errors.New("boom"))
-	if rec.Code != http.StatusInternalServerError {
-		t.Errorf("普通错误状态码不符：%d", rec.Code)
-	}
+	testx.Equal(t, rec.Code, http.StatusInternalServerError)
+
 	var body map[string]string
 	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
 		t.Fatalf("响应体非法 JSON：%v", err)
@@ -73,9 +72,8 @@ func TestWriteJSONPlainError(t *testing.T) {
 func TestWriteJSONNil(t *testing.T) {
 	rec := httptest.NewRecorder()
 	WriteJSON(rec, nil)
-	if rec.Code != http.StatusInternalServerError {
-		t.Errorf("nil 错误状态码不符：%d", rec.Code)
-	}
+	testx.Equal(t, rec.Code, http.StatusInternalServerError)
+
 	if got := rec.Header().Get("Content-Type"); got != "application/json; charset=utf-8" {
 		t.Errorf("Content-Type 不符：%s", got)
 	}
