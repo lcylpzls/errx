@@ -2,6 +2,21 @@
 
 本项目遵循语义化版本（SemVer）。值得记录的变更统一维护在此文件。
 
+## [v1.4.0] - 2026-08-10
+
+### 新增
+
+- `SetMetricsHook(MetricsHook)` / `ResetMetricsHook()`：可选全局
+  指标钩子，构造与查询事件转发给 metricsx 等外部底座
+  （`errx.constructed` 带 kind 标签 / `errx.queried`）；
+- 默认关闭：热路径仅多一次原子加载，零分配、零额外开销；
+- 配套 `metricsx/adapters/errx` 适配器（家族统一接入）。
+
+### 质量
+
+- 新增钩子转发/重置/并发切换测试；覆盖率保持 100%，
+  race / vet / staticcheck 全绿。
+
 ## [v1.3.0] - 2026-08-09
 
 ### 新增
