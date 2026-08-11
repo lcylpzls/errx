@@ -3,7 +3,7 @@ package core
 import "sync/atomic"
 
 // MetricsHook 是可选的全局指标接收器。
-// 实现方通常来自 metricsx/adapters/errx 适配器；未设置时
+// 实现方通常来自 metricsx 等外部观测底座（自行实现 MetricsHook）；未设置时
 // 热路径仅多一次原子加载，不产生额外开销。
 type MetricsHook interface {
 	// IncCounter 增加一个计数指标。
@@ -17,8 +17,6 @@ type metricsHookState struct {
 
 // metricsHook 是全局指标钩子，nil 表示关闭。
 var metricsHook atomic.Pointer[metricsHookState]
-
-// Metrics 是 errx 运行指标快照，可接入监控面板。
 
 var metrics struct {
 	constructed atomic.Uint64
@@ -66,7 +64,3 @@ func loadMetricsHook() MetricsHook {
 	}
 	return st.hook
 }
-
-// Snapshot 返回运行指标快照。
-
-// ResetMetrics 清零全部指标。

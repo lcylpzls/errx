@@ -3,11 +3,15 @@
 ## 1. 创建错误
 
 ```go
-// 无原因
+// 显式指定分类
 err := errx.New(errx.KindNotFound, "USER_NOT_FOUND", "用户不存在")
 
 // 格式化消息
 err = errx.Newf(errx.KindInvalid, "BAD_ARG", "参数 %s 无效", "id")
+
+// 基于已注册错误码自动使用分类
+err = errx.NewCode("ORDER_FAIL", "下单失败")
+err = errx.NewCodef("ORDER_FAIL", "订单 %s 失败", "10086")
 ```
 
 ## 2. 包装底层错误
@@ -17,6 +21,9 @@ if err != nil {
     return errx.Wrap(err, errx.KindUnavailable, "DB_DOWN", "数据库不可用")
 }
 // Wrap/Wrapf 对 nil 返回 nil，可直接 return
+
+// 基于已注册错误码包装，自动使用注册分类
+return errx.WrapCode(err, "DB_DOWN", "数据库不可用")
 ```
 
 ## 3. 附加结构化字段
@@ -25,6 +32,9 @@ if err != nil {
 err = errx.New(errx.KindBusiness, "ORDER_FAIL", "下单失败").
     WithField("order_id", "10086").
     WithField("user_id", "42")
+
+// 对任意 error 附加字段（非 errx 错误自动包装为 UNKNOWN）
+err = errx.WithField(io.ErrUnexpectedEOF, "source", "upload")
 ```
 
 ## 4. 查询与决策
@@ -32,19 +42,23 @@ err = errx.New(errx.KindBusiness, "ORDER_FAIL", "下单失败").
 ```go
 if errx.Is(err, "ORDER_FAIL") { /* 业务处理 */ }
 if errx.Retryable(err) { backoff.Retry(fn) }
-code, _ := errx.CodeOf(err)
+code, ok := errx.CodeOf(err)
 kind := errx.KindOf(err)
+first, ok := errx.As(err)
 ```
 
-## 5. 错误码注册与文档生成
+## 5. 错误码注册
 
 ```go
 func init() {
     errx.RegisterCode("ORDER_FAIL", "下单失败")
     errx.RegisterCode("DB_DOWN", "数据库不可用")
+    errx.RegisterCodeKind("ORDER_FAIL", errx.KindBusiness)
 }
 
-// 生成错误码清单
+// 查询说明与错误码清单
+fmt.Println(errx.Describe("ORDER_FAIL"))
+fmt.Println(errx.CodeKind("ORDER_FAIL"))
 for _, info := range errx.Codes() {
     fmt.Printf("%s\t%s\n", info.Code, info.Description)
 }
@@ -57,19 +71,24 @@ fmt.Println(err)          // ORDER_FAIL: 下单失败
 fmt.Printf("%+v\n", err)  // 追加创建点调用栈
 
 // 程序化读取调用栈（日志/监控场景）
-for _, frame := range errx.As(err).StackTrace() {
-    fmt.Printf("%s:%d  %s\n", frame.File, frame.Line, frame.Function)
+if e, ok := errx.As(err); ok {
+    for _, frame := range e.StackTrace() {
+        fmt.Printf("%s:%d  %s\n", frame.File, frame.Line, frame.Function)
+    }
 }
+
+// 关闭/限制栈捕获（构造频率极高时）
+errx.SetStackCapture(false)
+errx.SetStackDepth(16)
 ```
 
-`StackTrace()` 返回 `[]errx.StackFrame`；`SetStackCapture(false)` 关闭捕获后返回 nil。
+`StackTrace()` 返回 `[]errx.StackFrame`；`SetStackCapture(false)` 关闭后返回 nil。
 
 ## 7. 与 logx 集成
 
 ```go
 import (
     "github.com/lcylpzls/errx"
-    errxlogx "github.com/lcylpzls/errx/logx"
     "github.com/lcylpzls/logx"
 )
 
@@ -80,18 +99,37 @@ logger, _ := logx.NewBuilder().
 err := errx.New(errx.KindBusiness, "ORDER_FAIL", "下单失败").
     WithField("order_id", "10086")
 
-logger.Error("业务失败", errxlogx.Fields(err))
+logger.Error("业务失败", logx.FieldsFromError(err))
 // err.code=ORDER_FAIL, err.kind=business, err.message=下单失败, order_id=10086
 ```
 
-## 8. 生产建议
+## 8. HTTP 状态映射与 JSON 输出
 
-- 错误码启动期统一注册，生成文档供前端/API 网关映射；
+```go
+import (
+    "github.com/lcylpzls/errx"
+    "github.com/lcylpzls/httpx"
+)
+
+// 仅取状态码
+code := errx.KindHTTPStatus(errx.KindOf(err)) // not_found → 404
+
+// 直接输出 JSON 错误响应体（code/kind/message）
+httpx.WriteErrorJSON(w, err)
+```
+
+`httpx.WriteErrorJSON` 对 nil 与普通错误安全：nil 输出 500 + 未知分类，
+普通错误 `code` 回退为 `UNKNOWN`，`kind` 回退为 `unknown`。
+
+## 9. 生产建议
+
+- 错误码启动期统一注册，供前端/API 网关映射；
 - 外部可重试场景用 `KindTimeout / KindRateLimited / KindUnavailable`；
 - 用户可见消息与内部消息分离：内部 `msg` 可含细节，输出给用户时自行映射；
-- 错误构造频率极高且不需要栈时可 `errx.SetStackCapture(false)`。
+- 错误构造频率极高且不需要栈时可 `errx.SetStackCapture(false)`；
+- 需要指标观测时实现 `errx.MetricsHook` 并注入 metricsx 等外部底座。
 
-## 9. 错误分类与策略
+## 10. 错误分类与策略
 
 errx 提供三级体系：**Kind（细分枚举）→ Category（领域分组）→ Policy（处理策略）**。
 
@@ -108,12 +146,9 @@ fmt.Println(errx.KindForbidden.Category()) // 认证与授权
 p := errx.KindUnavailable.Policy()
 if p.Retryable { backoff.Retry(fn) }
 if p.Alert { alert.Send() }
-
-// 生成按领域分组的错误分类表
-fmt.Println(errx.KindsMarkdown())
 ```
 
-## 10. 多错误聚合
+## 11. 多错误聚合
 
 ```go
 err := errx.Join(
@@ -129,7 +164,7 @@ var restored errx.Aggregate
 json.Unmarshal(data, &restored)
 ```
 
-## 11. 跨服务传输与 HTTP 映射
+## 12. 跨服务传输
 
 ```go
 // 服务端：错误直接 JSON 序列化（含原因链与字段）
@@ -139,45 +174,24 @@ data, _ := json.Marshal(err)
 var restored errx.Error
 json.Unmarshal(data, &restored)
 if errx.Is(&restored, "ORDER_FAIL") { /* 按错误码处理 */ }
-
-// HTTP 状态映射（网关/中间件）
-w.WriteHeader(err.HTTPStatus())
 ```
 
 调用栈不跨服务传输（序列化时省略），字段与原因链完整保留。
-`Aggregate` 通过 `{"errors":[...]}` 传输子错误数组，还原后 `errors.Is` 可命中任一子错误。
+`Aggregate` 通过 `{"errors":[...]}` 传输子错误数组，还原后
+`errors.Is` 可命中任一子错误。
 
-## 12. 观测指标
-
-```go
-// 错误构造与查询自动打点（原子计数，零锁）
-m := errx.Snapshot()
-fmt.Printf("构造 %d 次，查询 %d 次\n", m.Constructed, m.Queried)
-fmt.Printf("超时类构造：%d 次\n", m.ByKind[errx.KindTimeout])
-
-// 压测或统计窗口开始时清零
-errx.ResetMetrics()
-```
-
-指标字段：`Constructed`（构造数）、`Queried`（查询数）、`ByKind`（按 Kind 构造分布）。
-
-## 13. HTTP 适配（errx/httpx）
+## 13. 观测指标
 
 ```go
-import "github.com/lcylpzls/errx/httpx"
+type myHook struct{}
 
-func handler(w http.ResponseWriter, r *http.Request) {
-    err := doBusiness()
-    if err != nil {
-        // 自动映射状态码（如 not_found → 404）并输出 JSON 错误体
-        httpx.WriteJSON(w, err)
-        return
-    }
-    w.WriteHeader(http.StatusOK)
+func (myHook) IncCounter(name string, labels ...string) {
+    metrics.Inc(name, labels...) // 转发到 metricsx 等底座
 }
+
+errx.SetMetricsHook(myHook{})
+defer errx.ResetMetricsHook()
 ```
 
-响应体格式：`{"code":"ORDER_FAIL","kind":"business","message":"ORDER_FAIL: 下单失败"}`。
-
-`WriteJSON` 对 nil 与普通错误安全：nil 输出 500 + 未知分类，普通错误的
-`code` 回退为 `UNKNOWN`，与 `kind` 回退语义一致，可直接放入错误处理中间件。
+`MetricsHook` 仅接收错误构造/查询事件，不影响错误语义；
+未设置钩子时热路径仅多一次原子加载，无额外开销。

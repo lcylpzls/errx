@@ -118,4 +118,3 @@ func TestKindRetryable(t *testing.T) {
 		}
 	}
 }
-

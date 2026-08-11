@@ -138,4 +138,3 @@ func TestKindHTTPStatus(t *testing.T) {
 		}
 	}
 }
-

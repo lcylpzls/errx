@@ -52,7 +52,17 @@ error（标准接口）
 - 注册表由 `RWMutex` 保护，注册与查询并发安全；
 - `SetStackCapture` 为原子开关。
 
-## 6. logx 适配（errx/logx）
+## 6. 外部观测（MetricsHook）
 
-适配子包单向依赖 `github.com/lcylpzls/logx`，将错误转为 `logx.FieldGroup`：
-`err.code` / `err.kind` / `err.message` + 错误携带的 KV 字段。logx 核心保持零依赖。
+- `SetMetricsHook(hook)` 注册全局钩子（`MetricsHook.IncCounter`），
+  接收错误构造与查询事件；`ResetMetricsHook()` 或传 nil 关闭；
+- 钩子不参与错误语义，仅用于转发到 metricsx 等外部观测底座；
+- 未设置钩子时热路径仅多一次原子加载，无额外开销。
+
+## 7. 与 logx / httpx 的协作
+
+- logx 通过 `logx.FieldsFromError(err)` 读取 errx 结构化错误，
+  输出 `err.code` / `err.kind` / `err.message` 与携带的 KV 字段；
+- httpx 通过 `errx.KindHTTPStatus(errx.KindOf(err))` 映射 HTTP 状态码，
+  并提供 `WriteErrorJSON` 输出统一 JSON 错误体；
+- errx 自身零依赖，上述协作由 logx / httpx 单方向完成。

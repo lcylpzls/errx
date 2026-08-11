@@ -124,7 +124,6 @@ func TestWrapCode(t *testing.T) {
 	}
 }
 
-
 func TestGroupPrefix(t *testing.T) {
 	cases := []struct {
 		code Code

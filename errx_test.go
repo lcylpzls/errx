@@ -10,7 +10,7 @@ import (
 // TestPublicAPI 黑盒冒烟测试：覆盖根包全部转发函数与类型别名，
 // 保证 internal/core 重构后公开 API 行为一致。
 func TestPublicAPI(t *testing.T) {
-	if errx.Version != "v1.6.0" {
+	if errx.Version != "v1.6.1" {
 		t.Fatalf("Version = %s", errx.Version)
 	}
 
